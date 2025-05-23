@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Modal1 from "./Modal1";
 import HelixModal from "./HelixModal";
-import MotorWindingModal from "./MotorWindingModal";
+import VectorFieldModal from "./VectorField";
 
 export default function App() {
   const [modal1Open, setModal1Open] = useState(false);
@@ -49,7 +49,7 @@ export default function App() {
         />
       )}
       {modal3Open && (
-        <MotorWindingModal
+        <VectorFieldModal
           onClose={() => {
             setModal3Open(false);
           }}
