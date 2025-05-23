@@ -2,65 +2,69 @@ import numpy as np
 from scipy.integrate import solve_ivp
 
 # Constants
-MU_0 = 4 * np.pi * 1e-7  # vacuum permeability
+MU_0 = 4 * np.pi * 1e-7
+I    = 1.0
 
-# Parameters of the solenoid
-I = 1.0          # current in amperes
-N = 50           # number of wire segments (adjusted for smooth coil but reasonable speed)
+# Coil geometry
 coil_radius = 1.0
 coil_length = 5.0
-turns = 5
+turns       = 5
+N           = 50
 
-# Generate coil points and segment directions (dl vectors)
-theta = np.linspace(0, 2 * np.pi * turns, N)
-x_coil = (coil_length / (2 * np.pi * turns)) * theta - coil_length / 2  # along x axis, centered
-y_coil = coil_radius * np.cos(theta)
-z_coil = coil_radius * np.sin(theta)
-coil_points = np.stack([x_coil, y_coil, z_coil], axis=1)
-
-# Compute dl vectors as differences between coil points
-dl = np.diff(coil_points, axis=0)
-dl = np.vstack([dl, dl[-1]])  # repeat last dl for equal length
+# Build the helix
+theta    = np.linspace(0, 2*np.pi*turns, N)
+x_coil   = (coil_length/(2*np.pi*turns))*theta - coil_length/2
+y_coil   = coil_radius * np.cos(theta)
+z_coil   = coil_radius * np.sin(theta)
+coil_pts = np.stack([x_coil, y_coil, z_coil], axis=1)
+dl       = np.diff(coil_pts, axis=0)
+dl       = np.vstack([dl, dl[-1]])  # repeat last segment
 
 def biot_savart_field(r):
     """
-    Calculate magnetic field B at point r due to coil segments.
+    Vectorized Biot–Savart: r is shape (3,),
+    coil_pts & dl are (N,3).
     """
-    B = np.zeros(3)
-    for i in range(N):
-        r_prime = coil_points[i]
-        dl_i = dl[i]
-        R = r - r_prime
-        R_mag = np.linalg.norm(R)
-        if R_mag < 1e-6:
-            continue
-        dB = MU_0 * I / (4 * np.pi) * np.cross(dl_i, R) / (R_mag ** 3)
-        B += dB
-    return B
+    R    = r - coil_pts                         # (N,3)
+    rmag = np.linalg.norm(R, axis=1)            # (N,)
+    mask = rmag > 1e-6
+    Rf   = R[mask]                               # (M,3)
+    df   = dl[mask]                              # (M,3)
+    rmf  = rmag[mask][:,None]                    # (M,1)
+    cross = np.cross(df, Rf)                     # (M,3)
+    return (MU_0*I/(4*np.pi)) * np.sum(cross/(rmf**3), axis=0)
 
-def trace_loop(start, length=35, npts=20):
-    # 1) ODE
+def trace_loop_quick(start, length=40.0, npts=20):
+    """
+    Very fast: no events, exactly npts samples, then force‐close.
+    """
+    # ODE: dr/dt = B / |B|
     def ode(t, y):
         B = biot_savart_field(y)
-        return B / np.linalg.norm(B) if np.linalg.norm(B)>0 else [0,0,0]
+        m = np.linalg.norm(B)
+        return (B/m) if m>0 else [0,0,0]
 
-    # 2) t_eval for exact sample count
+    # sample times
     t_eval = np.linspace(0, length, npts)
 
-    sol = solve_ivp(ode, (0, length), start,
+    sol = solve_ivp(ode,
+                    (0, length),
+                    start,
                     t_eval=t_eval,
-                    max_step=length/npts)
+                    max_step=length/npts,  # ~1 step per sample
+                    method='RK23')
     pts = sol.y.T
 
-    # 3) force closure
+    # force‐close the loop
     pts[-1] = pts[0]
     return pts
 
 if __name__ == "__main__":
     start = np.array([0.0, 0.0, coil_radius*0.5])
-    loop_pts = trace_loop(start, length=35, npts=20)
+    # You may need to tweak `length` (e.g. 30…50) until the loop looks good.
+    loop_pts = trace_loop_quick(start, length=80, npts=30)
 
     print("const fieldLine = [")
     for p in loop_pts:
-        print(f"    new THREE.Vector3({p[0]:.4f}, {p[1]:.4f}, {p[2]:.4f}),")
+        print(f"  new THREE.Vector3({p[0]:.4f}, {p[1]:.4f}, {p[2]:.4f}),")
     print("];")
