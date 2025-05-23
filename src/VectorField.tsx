@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -8,13 +8,9 @@ interface ModalProps {
     onClose: () => void;
 }
 
-// Parameters for the coil
-const coilRadius = 1;
-const coilLength = 5;
-const turns = 10;
 const segments = 200;
 
-function CoilMesh() {
+function CoilMesh({ coilRadius, coilLength, turns }: { coilRadius: number; coilLength: number; turns: number; }) {
     const points = useMemo(() => {
         const pts: THREE.Vector3[] = [];
         const theta = (2 * Math.PI * turns);
@@ -27,7 +23,7 @@ function CoilMesh() {
             pts.push(new THREE.Vector3(x, y, z));
         }
         return pts;
-    }, []);
+    }, [coilRadius, coilLength, turns]);
 
     const curve = useMemo(() => new THREE.CatmullRomCurve3(points), [points]);
     const geometry = useMemo(() => new THREE.TubeGeometry(curve, 200, 0.05, 8, false), [curve]);
@@ -39,13 +35,13 @@ function CoilMesh() {
     );
 }
 
-function FieldHeatmap() {
+function FieldArrows({ coilRadius, coilLength, turns, current }: { coilRadius: number; coilLength: number; turns: number; current: number;}) {
     const fieldPoints = useMemo(() => {
         const elements: React.JSX.Element[] = [];
         const gridSize = 50;
         const spacing = 0.5;
         const MU_0 = 4 * Math.PI * 1e-7;
-        const I = 1.0;
+        const I = current;
 
         // Create coil segment vectors
         const theta = (2 * Math.PI * turns);
@@ -97,12 +93,17 @@ function FieldHeatmap() {
             }
         }
         return elements;
-    }, []);
+    }, [coilRadius, coilLength, turns, current]);
 
     return <>{fieldPoints}</>;
 }
 
 export default function VectorFieldModal({ onClose }: ModalProps) {
+    const [coilLength, setCoilLength] = useState(5);
+    const [coilRadius, setCoilRadius] = useState(1);
+    const [turns, setTurns] = useState(10);
+    const [current, setCurrent] = useState(1);
+
     return createPortal(
         <div
             style={{
@@ -118,39 +119,74 @@ export default function VectorFieldModal({ onClose }: ModalProps) {
         >
             <div
                 style={{
-                    width: 600,
-                    height: 400,
+                    width: "100%",
+                    maxWidth: 900,
+                    height: "100%",
+                    maxHeight: "90dvh",
                     background: "white",
-                    padding: 20,
+                    padding: 10,
                     borderRadius: 8,
                     position: "relative",
+                    display: "flex",
+                    flexDirection: "column",
+                    overflow: "hidden"
                 }}
                 onClick={e => e.stopPropagation()}
             >
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onClose();
-                    }}
-                    style={{
-                        position: "absolute",
-                        top: 10,
-                        right: 10,
-                        zIndex: 10,
-                        pointerEvents: "auto",
-                    }}
-                >
-                    Close
-                </button>
-                <div style={{ pointerEvents: "none", width: "100%", height: "100%" }}>
-                    <Canvas style={{ pointerEvents: "auto", width: "100%", height: "100%" }}
-                        camera={{ position: [0, 10, 0], fov: 45 }}>
-                        <ambientLight intensity={0.5} />
-                        <pointLight position={[10, 10, 10]} />
-                        <CoilMesh />
-                        <FieldHeatmap />
-                        <OrbitControls />
-                    </Canvas>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onClose();
+                        }}
+                        style={{
+                            width: 32,
+                            height: 32,
+                            fontSize: 18,
+                            fontWeight: "bold",
+                            background: "transparent",
+                            color: "black",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                        }}
+                        aria-label="Close"
+                    >
+                        ×
+                    </button>
+                </div>
+                 <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+                    <div style={{ marginBottom: 10, display: "flex", flexWrap: "wrap", gap: 20, justifyContent: "space-around", color: "black" }}>
+                        <div>
+                            <label>Coil Length: {coilLength} m</label><br />
+                            <input type="range" min="1" max="10" step="0.1" value={coilLength} onChange={e => setCoilLength(Number(e.target.value))} />
+                        </div>
+                        <div>
+                            <label>Coil Radius: {coilRadius} m</label><br />
+                            <input type="range" min="0.2" max="3" step="0.1" value={coilRadius} onChange={e => setCoilRadius(Number(e.target.value))} />
+                        </div>
+                        <div>
+                            <label>Turns: {turns}</label><br />
+                            <input type="range" min="1" max="30" step="1" value={turns} onChange={e => setTurns(Number(e.target.value))} />
+                        </div>
+                        <div>
+                            <label>Current: {current} A</label><br />
+                            <input type="range" min="0.1" max="5" step="0.1" value={current} onChange={e => setCurrent(Number(e.target.value))} />
+                        </div>
+                    </div>
+
+                    <div style={{ flexGrow: 1, pointerEvents: "none" }}>
+                        <Canvas
+                            style={{ pointerEvents: "auto", width: "100%", height: "100%" }}
+                            camera={{ position: [0, 10, 0], up: [0, 0, 1], fov: 45 }}
+                        >
+                            <ambientLight intensity={0.5} />
+                            <pointLight position={[10, 10, 10]} />
+                            <CoilMesh coilLength={coilLength} coilRadius={coilRadius} turns={turns} />
+                            <FieldArrows coilLength={coilLength} coilRadius={coilRadius} turns={turns} current={current} />
+                        </Canvas>
+                    </div>
                 </div>
             </div>
         </div>,
