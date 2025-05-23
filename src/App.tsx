@@ -1,23 +1,24 @@
 import React, { useState } from "react";
 import Modal1 from "./Modal1";
-import Modal2 from "./HelixCurve";
+import HelixModal from "./HelixModal";
+import MotorWindingModal from "./MotorWindingModal";
 
 export default function App() {
   const [modal1Open, setModal1Open] = useState(false);
   const [modal2Open, setModal2Open] = useState(false);
+  const [modal3Open, setModal3Open] = useState(false);
 
   return (
     <div className="flex flex-col gap-4 bg-gray-800 p-8"
-     style={{ paddingLeft: "1rem", minWidth: "200px" }}>
-      <button 
-      className=""
+      style={{ paddingLeft: "1rem", minWidth: "200px" }}>
+      <button
+        className=""
         onClick={() => {
           setModal1Open(true);
         }}
       >
         Test Modal 1
       </button>
-      <br />
       <button
         onClick={() => {
           setModal2Open(true);
@@ -25,7 +26,14 @@ export default function App() {
       >
         Test Modal 2
       </button>
-        
+      <button
+        onClick={() => {
+          setModal3Open(true);
+        }}
+      >
+        Test Modal 3
+      </button>
+
       {modal1Open && (
         <Modal1
           onClose={() => {
@@ -34,9 +42,16 @@ export default function App() {
         />
       )}
       {modal2Open && (
-        <Modal2
+        <HelixModal
           onClose={() => {
             setModal2Open(false);
+          }}
+        />
+      )}
+      {modal3Open && (
+        <MotorWindingModal
+          onClose={() => {
+            setModal3Open(false);
           }}
         />
       )}

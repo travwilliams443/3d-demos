@@ -283,7 +283,7 @@ export function MagneticFieldSpline({ }: MagneticFieldSplineProps) {
   );
 }
 
-export default function Modal1({ onClose }: ModalProps) {
+export default function HelixModal({ onClose }: ModalProps) {
   const electronCount = 10;
 
   return createPortal(
