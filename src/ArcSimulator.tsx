@@ -1,6 +1,4 @@
 import { createPortal } from "react-dom";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
 
 interface ModalProps {
     onClose: () => void;
@@ -47,15 +45,7 @@ export default function Modal1({ onClose }: ModalProps) {
                     Close
                 </button>
                 <div style={{ pointerEvents: "none", width: "100%", height: "100%" }}>
-                    <Canvas style={{ pointerEvents: "auto", width: "100%", height: "100%" }}>
-                        <ambientLight intensity={0.5} />
-                        <pointLight position={[10, 10, 10]} />
-                        <mesh>
-                            <boxGeometry args={[1, 1, 1]} />
-                            <meshStandardMaterial color="royalblue" />
-                        </mesh>
-                        <OrbitControls />
-                    </Canvas>
+                    
                 </div>
             </div>
         </div>,

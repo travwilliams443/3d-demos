@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Modal1 from "./Modal1";
-import HelixModal from "./HelixModal";
+import ArcSimulator from "./ArcSimulator";
 import VectorFieldModal from "./VectorField";
 
 export default function App() {
@@ -42,7 +42,7 @@ export default function App() {
         />
       )}
       {modal2Open && (
-        <HelixModal
+        <ArcSimulator
           onClose={() => {
             setModal2Open(false);
           }}
