@@ -9,7 +9,7 @@ export default function ArcSimulator({ onClose }: ModalProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     // Animation state
-    const [running, setRunning] = useState(false);
+    const [running, setRunning] = useState(true);
     const [t, setT] = useState(0); // progress (0 to 1)
     const [magnetic, setMagnetic] = useState(false);
 
@@ -20,7 +20,8 @@ export default function ArcSimulator({ onClose }: ModalProps) {
         let frame: number;
         const animate = () => {
             setT((prev) => {
-                const next = Math.min(prev + 0.008, 1);
+                let next = Math.min(prev + 0.008, 1);
+            if (next >= 1) next = 0; // Loop back to start!
                 return next;
             });
             frame = requestAnimationFrame(animate);
@@ -66,37 +67,108 @@ export default function ArcSimulator({ onClose }: ModalProps) {
         ctx.lineTo(rightX, y + contactLength / 2);
         ctx.stroke();
 
-        // Draw arc if gap is open
-        if (t > 0.08 && t < 0.95) {
+        // Draw arc if gap is open (magnetic blowout extinguishes faster)
+        const arcEndTime = magnetic ? 0.7 : 0.95;
+        if (t > 0.08 && t < arcEndTime) {
             ctx.save();
-            // Arc path (curve: straight, or bent with "magnetic blowout")
-            ctx.lineWidth = 6;
-            ctx.strokeStyle = magnetic ? "#2ee7ff" : "#ffbe33";
-            ctx.shadowColor = magnetic ? "#2ee7ff" : "#ffbe33";
-            ctx.shadowBlur = 18;
-
+            
+            // Generate jagged arc path points
+            const generateArcPath = () => {
+                const points = [];
+                const segments = 12;
+                const gapWidth = rightX - leftX;
+                
+                for (let i = 0; i <= segments; i++) {
+                    const progress = i / segments;
+                    let x = leftX + gapWidth * progress;
+                    let baseY = y;
+                    
+                    if (magnetic) {
+                        // Magnetic blowout curve - more dramatic bending stretches arc
+                        const blowoutIntensity = Math.min(t * 2.5, 2); // Increases faster
+                        const curveHeight = -80 - 120 * blowoutIntensity;
+                        baseY = y + curveHeight * Math.sin(progress * Math.PI) * 0.8;
+                        // Add horizontal stretching effect
+                        x += Math.sin(progress * Math.PI) * 40 * blowoutIntensity;
+                    } else {
+                        // Natural slight curve - much less bending
+                        baseY = y - (20 + 40 * t) * Math.sin(progress * Math.PI);
+                    }
+                    
+                    // Add random zigzag motion
+                    const zigzag = (Math.random() - 0.5) * 20 * (1 - Math.abs(progress - 0.5) * 2);
+                    const flutter = Math.sin(Date.now() * 0.01 + i) * 8;
+                    
+                    points.push({
+                        x: x + zigzag,
+                        y: baseY + flutter
+                    });
+                }
+                return points;
+            };
+            
+            const arcPoints = generateArcPath();
+            
+            // Draw multiple arc layers for realistic effect
+            // Arc becomes dimmer and more stretched with magnetic blowout
+            const arcIntensity = magnetic ? Math.max(0.3, 1 - t * 1.5) : 1;
+            
+            // 1. Outer glow (large, dim)
+            ctx.globalCompositeOperation = 'screen';
+            ctx.strokeStyle = `rgba(46, 231, 255, ${0.3 * arcIntensity})`;
+            ctx.lineWidth = 16;
+            ctx.shadowColor = '#2ee7ff';
+            ctx.shadowBlur = 30;
             ctx.beginPath();
-            ctx.moveTo(leftX, y);
-            if (magnetic) {
-                // Bend arc: control point up and to the right
-                ctx.bezierCurveTo(
-                    leftX + (rightX - leftX) * 0.15,
-                    y - 60 - 90 * t, // more bend as contacts open
-                    rightX + 60 * t,
-                    y - 60 - 90 * t,
-                    rightX,
-                    y
-                );
-            } else {
-                // Straight arc (slight curve for effect)
-                ctx.quadraticCurveTo(
-                    (leftX + rightX) / 2,
-                    y - 30 - 70 * t,
-                    rightX,
-                    y
-                );
+            ctx.moveTo(arcPoints[0].x, arcPoints[0].y);
+            for (let i = 1; i < arcPoints.length; i++) {
+                ctx.lineTo(arcPoints[i].x, arcPoints[i].y);
             }
             ctx.stroke();
+            
+            // 2. Main arc body 
+            ctx.strokeStyle = `rgba(77, 210, 255, ${0.8 * arcIntensity})`;
+            ctx.lineWidth = 8;
+            ctx.shadowBlur = 20;
+            ctx.beginPath();
+            ctx.moveTo(arcPoints[0].x, arcPoints[0].y);
+            for (let i = 1; i < arcPoints.length; i++) {
+                ctx.lineTo(arcPoints[i].x, arcPoints[i].y);
+            }
+            ctx.stroke();
+            
+            // 3. Hot core (gets dimmer with magnetic blowout)
+            ctx.strokeStyle = `rgba(255, 255, 255, ${arcIntensity})`;
+            ctx.lineWidth = 3;
+            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.moveTo(arcPoints[0].x, arcPoints[0].y);
+            for (let i = 1; i < arcPoints.length; i++) {
+                ctx.lineTo(arcPoints[i].x, arcPoints[i].y);
+            }
+            ctx.stroke();
+            
+            // 4. Sparks at contact points
+            const drawSparks = (x: number, y: number) => {
+                for (let i = 0; i < 8; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const length = Math.random() * 15 + 5;
+                    const sparkX = x + Math.cos(angle) * length;
+                    const sparkY = y + Math.sin(angle) * length;
+                    
+                    ctx.strokeStyle = `rgba(255, ${200 + Math.random() * 55}, ${100 + Math.random() * 100}, ${0.6 + Math.random() * 0.4})`;
+                    ctx.lineWidth = 1 + Math.random() * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(sparkX, sparkY);
+                    ctx.stroke();
+                }
+            };
+            
+            drawSparks(leftX, y);
+            drawSparks(rightX, y);
+            
             ctx.restore();
         }
 
