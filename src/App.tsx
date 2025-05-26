@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Modal1 from "./Modal1";
-import ArcSimulator from "./ArcSimulator";
+import ArcSimulator from "./components/ArcSimulator";
 import VectorFieldModal from "./VectorField";
 
 export default function App() {
