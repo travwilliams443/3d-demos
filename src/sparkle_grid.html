@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Jellyfish Generative Art</title>
+  <!-- Load p5.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+
+<body>
+  <script>
+    // Grid config
+    const gridSpacing = 48; // px between grid lines
+    const nodeSize = 1;     // max radius of node sparkle
+    const gridColor = [255, 255, 255, 5];  // RGBA, very faint
+
+    function setup() {
+      createCanvas(window.innerWidth, window.innerHeight);
+      noFill();
+      frameRate(60);
+    }
+
+    function draw() {
+      background(17, 17, 17, 255); // #111, opaque
+
+      // Draw faint grid
+      stroke(...gridColor);
+      for (let x = 0; x <= width; x += gridSpacing) {
+        line(x, 0, x, height);
+      }
+      for (let y = 0; y <= height; y += gridSpacing) {
+        line(0, y, width, y);
+      }
+
+      // Gentle sparkle at grid nodes
+      let t = millis() / 2200.0; // Slow, dreamy
+
+      for (let x = 0; x <= width; x += gridSpacing) {
+        for (let y = 0; y <= height; y += gridSpacing) {
+          // Subtle phase so waves drift diagonally
+          let base = t + (x + y) / 600;
+          let swirl = t * 0.8 + dist(x, y, width / 2, height / 2) / 140; // distance from center
+          let ripple = t * 1.7 + x / 120 - y / 160;
+
+          let sparkle = (
+            0.40 * sin(base) +      // Main diagonal wave
+            0.25 * sin(swirl) +     // Radial/center swirl
+            0.20 * sin(ripple)      // Off-angle ripple
+          );
+
+          // Clamp between -1 and 1
+          sparkle = constrain(sparkle, -1, 1);
+          // Remap to a gentle visible range
+          sparkle = map(sparkle, -1, 1, 0.12, 0.8);
+          // Sparkle amount: soft sine wave, mapped to 0.2–1
+
+          // Make it faint (alpha based on sparkle)
+          fill(255, 255, 255, 50 * sparkle); // very faint
+          noStroke();
+          ellipse(x, y, nodeSize * sparkle + 1.4, nodeSize * sparkle + 1.4);
+        }
+      }
+    }
+
+    function windowResized() {
+      resizeCanvas(window.innerWidth, window.innerHeight);
+    }
+  </script>
+
+</body>
+
+</html>
