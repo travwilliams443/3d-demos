@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Jellyfish Generative Art</title>
+    <!-- Load p5.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
+    <style>
+      body { margin: 0; background: #111; }
+      canvas { display: block; margin: 0 auto; }
+    </style>
+  </head>
+  <body>
+    <script>
+      let t = 0;
+
+      function setup() {
+        createCanvas(400, 400);
+        background(9);
+        stroke(255, 66);
+        noFill();
+      }
+
+      function draw() {
+        background(9);
+        stroke(255, 66);
+
+        t += PI / 45;
+        for (let i = 10000; i--;) {
+          a(i % 200, i / 55);
+        }
+      }
+
+      function a(x, y) {
+        let k = 9 * Math.cos(x / 8);
+        let e = y / 8 - 12.5;
+        let d = (k * k + e * e) / 99 + Math.sin(t) / 6 + 0.5;
+        let q = 99 - e * Math.sin(Math.atan2(k, e) * 7) / d + k * (3 + Math.cos(d * d - t) * 2);
+        let c = d / 2 + e / 69 - t / 16;
+        point(q * Math.sin(c) + 200, (q + 19 * d) * Math.cos(c) + 200);
+      }
+    </script>
+  </body>
+</html>

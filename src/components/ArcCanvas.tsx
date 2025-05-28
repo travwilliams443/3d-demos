@@ -3,13 +3,13 @@ import { renderArc, type ArcRenderData } from '../utils/arcRenderer';
 
 interface ArcCanvasProps {
   progress: number;
-  magnetic: boolean;
+  arcChutes: boolean;
 }
 
-export function ArcCanvas({ progress, magnetic }: ArcCanvasProps) {
+export function ArcCanvas({ progress, arcChutes }: ArcCanvasProps) {
   const canvasRef = useCanvas<ArcRenderData>(
     renderArc,
-    [{ progress, magnetic, canvasWidth: 600, canvasHeight: 320 }]
+    [{ progress, arcChutes, canvasWidth: 600, canvasHeight: 320 }]
   );
 
   return (

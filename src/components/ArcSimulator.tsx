@@ -9,7 +9,7 @@ interface ArcSimulatorProps {
 }
 
 export default function ArcSimulator({ onClose }: ArcSimulatorProps) {
-  const [magnetic, setMagnetic] = useState(false);
+  const [arcChutes, setArcChutes] = useState(false);
   const { running, progress, reset, toggle } = useAnimation();
 
   return (
@@ -18,12 +18,12 @@ export default function ArcSimulator({ onClose }: ArcSimulatorProps) {
         running={running}
         onToggle={toggle}
         onReset={reset}
-        magnetic={magnetic}
-        onMagneticChange={setMagnetic}
+        arcChutes={arcChutes}
+        onArcChutesChange={setArcChutes}
       />
       <ArcCanvas 
         progress={progress} 
-        magnetic={magnetic} 
+        arcChutes={arcChutes} 
       />
     </Modal>
   );

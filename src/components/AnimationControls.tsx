@@ -2,16 +2,16 @@ interface AnimationControlsProps {
   running: boolean;
   onToggle: () => void;
   onReset: () => void;
-  magnetic: boolean;
-  onMagneticChange: (magnetic: boolean) => void;
+  arcChutes: boolean;
+  onArcChutesChange: (arcChutes: boolean) => void;
 }
 
 export function AnimationControls({ 
   running, 
   onToggle, 
   onReset, 
-  magnetic, 
-  onMagneticChange 
+  arcChutes, 
+  onArcChutesChange 
 }: AnimationControlsProps) {
   return (
     <div className="flex gap-2 mb-2">
@@ -30,10 +30,10 @@ export function AnimationControls({
       <label className="flex items-center gap-2 ml-4 text-gray-700">
         <input
           type="checkbox"
-          checked={magnetic}
-          onChange={e => onMagneticChange(e.target.checked)}
+          checked={arcChutes}
+          onChange={e => onArcChutesChange(e.target.checked)}
         />
-        Magnetic Blowout
+        Arc Chutes
       </label>
     </div>
   );
