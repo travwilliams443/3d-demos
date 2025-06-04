@@ -2,7 +2,7 @@ import { useRef, useEffect } from 'react';
 
 export function useCanvas<T = unknown>(
   draw: (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, data: T) => void,
-  dependencies: ReadonlyArray<unknown>
+  dependencies: ReadonlyArray<T>
 ) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
