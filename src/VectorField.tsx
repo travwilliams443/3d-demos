@@ -1,9 +1,7 @@
 import React, { useMemo, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
-import { OrbitControls } from "@react-three/drei";
-import type { RootState } from "@react-three/fiber";
 
 interface ModalProps {
     onClose: () => void;
@@ -47,7 +45,7 @@ function biotSavart(
     current: number
 ): THREE.Vector3 {
     const MU_0 = 4 * Math.PI * 1e-7;
-    let B = new THREE.Vector3(0, 0, 0);
+    const B = new THREE.Vector3(0, 0, 0);
     for (let i = 0; i < coilPts.length; i++) {
         const R = new THREE.Vector3().subVectors(r, coilPts[i]);
         const rMag = R.length();
@@ -278,7 +276,7 @@ export default function VectorFieldModal({ onClose }: ModalProps) {
                                 setHoveredB(undefined);
                                 setScreenPos(null);
                             }}
-                            onPointerMove={e => {
+                            onPointerMove={() => {
                                 // Only update tooltip if hovering an arrow (FieldArrows will handle this)
                             }}
                         >
@@ -296,7 +294,9 @@ export default function VectorFieldModal({ onClose }: ModalProps) {
 
                                     // Project to screen for tooltip
                                     if (pos && canvasRef.current) {
-                                        const { camera, size } = (window as any).threeFiberState || {};
+                                        const { camera, size } = (window as unknown as {
+                                            threeFiberState?: { camera: THREE.Camera; size: { width: number; height: number } };
+                                        }).threeFiberState || {};
                                         // Fallback: center modal if no camera
                                         if (camera && size) {
                                             setScreenPos(projectToScreen(pos, camera, size));

@@ -5,7 +5,7 @@ export interface ArcRenderData {
   canvasHeight: number;
 }
 
-export function renderArc(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, data: ArcRenderData) {
+export function renderArc(ctx: CanvasRenderingContext2D, _canvas: HTMLCanvasElement, data: ArcRenderData) {
   const { progress: t, arcChutes, canvasWidth: w, canvasHeight: h } = data;
 
   // Clear canvas
