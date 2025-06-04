@@ -34,14 +34,14 @@ export default function App() {
           setModal2Open(true);
         }}
       >
-        Test Modal 2
+        Arc Suppression
       </button>
       <button
         onClick={() => {
           setModal3Open(true);
         }}
       >
-        Test Modal 3
+        Magnetic Field
       </button>
       <button onClick={() => setHelixOpen(true)}>Helix Demo</button>
       <button onClick={() => setMotorOpen(true)}>Motor Winding Demo</button>
