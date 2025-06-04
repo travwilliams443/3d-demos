@@ -5,6 +5,13 @@ export interface ArcRenderData {
   canvasHeight: number;
 }
 
+const CHUTE_BASE_X = 300;
+const CHUTE_BASE_Y = 50;
+const CHUTE_COUNT = 8;
+const CHUTE_WIDTH = 8;
+const CHUTE_HEIGHT = 50;
+const CHUTE_SPACING = 10;
+
 export function renderArc(ctx: CanvasRenderingContext2D, _canvas: HTMLCanvasElement, data: ArcRenderData) {
   const { progress: t, arcChutes, canvasWidth: w, canvasHeight: h } = data;
 
@@ -23,14 +30,23 @@ export function renderArc(ctx: CanvasRenderingContext2D, _canvas: HTMLCanvasElem
   drawContacts(ctx, leftX, rightX, y, contactLength);
 
   // Draw arc
-  const arcEndTime = arcChutes ? 0.5 : 0.95;
+  const arcEndTime = arcChutes ? 0.8 : 0.95;
   if (t > 0.08 && t < arcEndTime) {
     drawElectricalArc(ctx, leftX, rightX, y, t, arcChutes);
   }
 
   // Draw arc chutes if enabled
   if (data.arcChutes) {
-    drawArcChutes(ctx, 300, 50, 8, 8, 50, 10, "#c5a880");
+    drawArcChutes(
+      ctx,
+      CHUTE_BASE_X,
+      CHUTE_BASE_Y,
+      CHUTE_COUNT,
+      CHUTE_WIDTH,
+      CHUTE_HEIGHT,
+      CHUTE_SPACING,
+      "#c5a880"
+    );
   }
   // Draw labels
   //drawLabels(ctx, leftX, rightX, y, contactLength);
@@ -59,6 +75,26 @@ export function drawArcChutes(
     );
   }
   ctx.restore();
+}
+
+export function getChuteCenters(
+  baseX: number,
+  baseY: number,
+  count: number,
+  width: number,
+  height: number,
+  spacing: number
+) {
+  const centers = [] as { x: number; y: number }[];
+  const totalWidth = count * width + (count - 1) * spacing;
+  const startX = baseX - totalWidth / 2 + width / 2;
+  for (let i = 0; i < count; i++) {
+    centers.push({
+      x: startX + i * (width + spacing),
+      y: baseY + height / 2,
+    });
+  }
+  return centers;
 }
 
 export function drawContacts(ctx: CanvasRenderingContext2D, leftX: number, rightX: number, y: number, contactLength: number) {
@@ -110,20 +146,66 @@ export function generateArcPath(leftX: number, rightX: number, y: number, t: num
   return points;
 }
 
-export function drawElectricalArc(ctx: CanvasRenderingContext2D, leftX: number, rightX: number, y: number, t: number, magnetic: boolean) {
+export function generateChuteArc(
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number,
+  index: number
+) {
+  const segments = 10;
+  const points = [] as { x: number; y: number }[];
+  for (let i = 0; i <= segments; i++) {
+    const p = i / segments;
+    const x = startX + (endX - startX) * p;
+    let y = startY + (endY - startY) * p;
+    y += -40 * Math.sin(p * Math.PI) + Math.sin(p * Math.PI * 2 + index) * 10 * (1 - p);
+    const jitter = (Math.random() - 0.5) * 6 * (1 - p);
+    points.push({ x: x + jitter, y });
+  }
+  return points;
+}
+
+export function drawElectricalArc(
+  ctx: CanvasRenderingContext2D,
+  leftX: number,
+  rightX: number,
+  y: number,
+  t: number,
+  magnetic: boolean
+) {
   ctx.save();
 
-  const arcPoints = generateArcPath(leftX, rightX, y, t, magnetic);
-  const arcIntensity = magnetic ? Math.max(0.3, 1 - t * 1.5) : 1;
+  if (!magnetic || t < 0.4) {
+    const arcPoints = generateArcPath(leftX, rightX, y, t, magnetic);
+    const arcIntensity = magnetic ? Math.max(0.3, 1 - t * 1.5) : 1;
 
-  // Draw arc layers
-  drawArcLayer(ctx, arcPoints, 16, `rgba(46, 231, 255, ${0.3 * arcIntensity})`, 30);
-  drawArcLayer(ctx, arcPoints, 8, `rgba(77, 210, 255, ${0.8 * arcIntensity})`, 20);
-  drawArcLayer(ctx, arcPoints, 3, `rgba(255, 255, 255, ${arcIntensity})`, 8);
+    drawArcLayer(ctx, arcPoints, 16, `rgba(46, 231, 255, ${0.3 * arcIntensity})`, 30);
+    drawArcLayer(ctx, arcPoints, 8, `rgba(77, 210, 255, ${0.8 * arcIntensity})`, 20);
+    drawArcLayer(ctx, arcPoints, 3, `rgba(255, 255, 255, ${arcIntensity})`, 8);
+    drawSparks(ctx, leftX, y);
+    drawSparks(ctx, rightX, y);
+    ctx.restore();
+    return;
+  }
 
-  // Draw sparks
-  drawSparks(ctx, leftX, y);
-  drawSparks(ctx, rightX, y);
+  // Arc is pulled into the chutes
+  const centers = getChuteCenters(
+    CHUTE_BASE_X,
+    CHUTE_BASE_Y,
+    CHUTE_COUNT,
+    CHUTE_WIDTH,
+    CHUTE_HEIGHT,
+    CHUTE_SPACING
+  );
+  const arcIntensity = Math.max(0.3, 1 - (t - 0.4) * 2);
+  centers.forEach((c, idx) => {
+    const startX = idx < centers.length / 2 ? leftX : rightX;
+    const points = generateChuteArc(startX, y, c.x, c.y, idx);
+    drawArcLayer(ctx, points, 16, `rgba(46, 231, 255, ${0.3 * arcIntensity})`, 30);
+    drawArcLayer(ctx, points, 8, `rgba(77, 210, 255, ${0.8 * arcIntensity})`, 20);
+    drawArcLayer(ctx, points, 3, `rgba(255, 255, 255, ${arcIntensity})`, 8);
+  });
 
   ctx.restore();
 }
