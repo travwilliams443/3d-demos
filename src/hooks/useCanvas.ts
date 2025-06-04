@@ -1,8 +1,8 @@
 import { useRef, useEffect } from 'react';
 
-export function useCanvas<T = any>(
+export function useCanvas<T = unknown>(
   draw: (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, data: T) => void,
-  dependencies: any[]
+  dependencies: ReadonlyArray<T>
 ) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
