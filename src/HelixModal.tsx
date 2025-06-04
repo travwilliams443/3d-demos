@@ -1,5 +1,4 @@
 import React, { useMemo, useRef } from "react";
-import type { JSX } from "react";
 import { createPortal } from "react-dom";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
@@ -66,59 +65,7 @@ function Electron({ offset }: ElectronProps) {
   );
 }
 
-// Parametric torus curve for magnetic field line
-class ToroidalFieldLine extends THREE.Curve<THREE.Vector3> {
-  R: number; // major radius
-  r: number; // minor radius
 
-  constructor(R = 2.5, r = 0.3) {
-    super();
-    this.R = R;
-    this.r = r;
-  }
-
-  getPoint(t: number): THREE.Vector3 {
-    // t goes from 0 to 1, angle from 0 to 2pi
-    const u = t * 2 * Math.PI;
-
-    // Parametric torus: 
-    // x = (R + r*cos(v)) * cos(u)
-    // y = (R + r*cos(v)) * sin(u)
-    // z = r * sin(v)
-    // Here we fix v at 0 for a simple loop
-    const x = this.R * Math.cos(u);
-    const y = this.R * Math.sin(u);
-    const z = 0;
-
-    return new THREE.Vector3(x, y, z);
-  }
-}
-
-function MagneticFieldLoops() {
-  const loopCount = 8;
-  const baseRadius = 2.5;
-  const tubeRadius = 0.05;
-
-  return (
-    <>
-      {[...Array(loopCount)].map((_, i) => {
-        const scale = 1 - i * 0.1; // slightly smaller for inner loops
-        const radius = baseRadius * scale;
-        const opacity = 0.6 - i * 0.05;
-
-        const curve = useMemo(() => new ToroidalFieldLine(radius, tubeRadius), [radius]);
-
-        const geometry = useMemo(() => new THREE.TubeGeometry(curve, 100, tubeRadius, 8, true), [curve]);
-
-        return (
-          <mesh key={i} geometry={geometry}>
-            <meshBasicMaterial color="deepskyblue" transparent opacity={opacity} toneMapped={false} />
-          </mesh>
-        );
-      })}
-    </>
-  );
-}
 
 interface InsideFieldLinesProps {
   length: number;        // length of the coil (x-axis)
@@ -148,21 +95,10 @@ export function InsideFieldLines({ length, count, radius }: InsideFieldLinesProp
       // Create geometry for this line
       const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
 
-      // Direction vector from start to end
-      const dir = new THREE.Vector3().subVectors(end, start).normalize();
-
-      // Position for arrow near the end
-      const arrowPos = new THREE.Vector3().lerpVectors(start, end, 0.95);
-
-      // Calculate quaternion for arrow orientation
-      const arrowQuat = new THREE.Quaternion();
-      arrowQuat.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
-
+      // Direction vector from start to end (unused)
       result.push({
         key: i,
         geometry,
-        arrowPos,
-        arrowQuat,
       });
     }
     return result;
@@ -170,16 +106,12 @@ export function InsideFieldLines({ length, count, radius }: InsideFieldLinesProp
 
   return (
     <>
-      {lines.map(({ key, geometry, arrowPos, arrowQuat }) => (
+      {lines.map(({ key, geometry }) => (
         <React.Fragment key={key}>
           <line>
             <bufferGeometry attach="geometry" {...geometry} />
             <lineBasicMaterial color="red" linewidth={2} />
           </line>
-          {/*<mesh position={arrowPos} quaternion={arrowQuat}>
-            <coneGeometry args={[0.1, 0.3, 8]} />
-            <meshBasicMaterial color="green" />
-          </mesh>*/}
         </React.Fragment>
       ))}
     </>
@@ -236,7 +168,8 @@ interface MagneticFieldSplineProps {
   loopHeight: number;
 }
 
-export function MagneticFieldSpline({ }: MagneticFieldSplineProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function MagneticFieldSpline(_props: MagneticFieldSplineProps) {
   const points = useMemo(() => {
     return [
       new THREE.Vector3(0.0000, 0.0000, 0.5000),
