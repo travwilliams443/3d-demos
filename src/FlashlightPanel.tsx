@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { TooltipWithArrow } from "./ToolTipWithArrow";
 
-const IMAGE_URL = "electrical-panel.jpg"; // Use your image path
+const IMAGE_URL = "/electrical-panel.jpg"; // Served from public/
 
 export default function FlashlightPanel() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);

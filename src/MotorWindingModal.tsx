@@ -93,7 +93,22 @@ export default function MotorWindingModal({ onClose }: ModalProps) {
       backgroundColor:'rgba(0,0,0,0.5)', display:'flex', justifyContent:'center', alignItems:'center', zIndex:1000
     }} onClick={onClose}>
       <div style={{ width:800, height:600, background:'white', borderRadius:8, position:'relative' }} onClick={e=>e.stopPropagation()}>
-        <button onClick={e=>{e.stopPropagation(); onClose();}} style={{ position:'absolute', top:10,right:10,padding:'4px 8px',cursor:'pointer' }}>Close</button>
+        <button
+          onClick={e => {
+            e.stopPropagation();
+            onClose();
+          }}
+          style={{
+            position: 'absolute',
+            top: 10,
+            right: 10,
+            padding: '4px 8px',
+            cursor: 'pointer',
+            zIndex: 1,
+          }}
+        >
+          Close
+        </button>
         <Canvas camera={{ position:[0,0,8], fov:50 }} style={{width:'100%',height:'100%'}}>
           <ambientLight intensity={0.4} />
           <directionalLight position={[5,5,5]} intensity={0.8} />
