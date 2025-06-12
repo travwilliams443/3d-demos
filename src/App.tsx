@@ -7,6 +7,7 @@ import MotorWindingModal from "./MotorWindingModal";
 import FlashlightPanel from "./FlashlightPanel";
 import IframeModal from "./IframeModal";
 import { Modal } from "./components/Modal";
+import FlowersDatasetModal from "./FlowersDatasetModal";
 
 export default function App() {
   const [modal1Open, setModal1Open] = useState(false);
@@ -17,6 +18,7 @@ export default function App() {
   const [flashlightOpen, setFlashlightOpen] = useState(false);
   const [octopusOpen, setOctopusOpen] = useState(false);
   const [sparkleOpen, setSparkleOpen] = useState(false);
+  const [flowersOpen, setFlowersOpen] = useState(false);
 
   return (
     <div className="flex flex-col gap-4 bg-gray-800 p-8"
@@ -48,6 +50,7 @@ export default function App() {
       <button onClick={() => setFlashlightOpen(true)}>Flashlight Demo</button>
       <button onClick={() => setOctopusOpen(true)}>Octopus p5.js</button>
       <button onClick={() => setSparkleOpen(true)}>Sparkle Grid</button>
+      <button onClick={() => setFlowersOpen(true)}>Flowers Dataset</button>
 
       {modal1Open && (
         <Modal1
@@ -96,6 +99,9 @@ export default function App() {
           width={700}
           height={500}
         />
+      )}
+      {flowersOpen && (
+        <FlowersDatasetModal onClose={() => setFlowersOpen(false)} />
       )}
     </div>
   );
